@@ -77,7 +77,13 @@ def savePage(name,directory,content):
   f.write(content)
   f.close()
 
-
+def retrySave(p,downlaoddir,delay):
+  try:
+    savePage(str(p[0])+".html",downloaddir,fetchPage(p[1]))
+    time.sleep(delay) # sleep delay seconds
+  except Exception:
+    time.sleep(delay+1)
+    retrySave(p,downloaddir,delay)
 
 def extract(baseurl,groupid,atid,downloaddir,delay=1):
   pageIterator = PageIterator(baseurl,groupid,atid);
@@ -85,8 +91,11 @@ def extract(baseurl,groupid,atid,downloaddir,delay=1):
 
   while (bugIterator.hasNext()):
     p = bugIterator.next()
-    savePage(str(p[0])+".html",downloaddir,fetchPage(p[1]))
-    time.sleep(delay) # sleep delay seconds 
+    try:
+      savePage(str(p[0])+".html",downloaddir,fetchPage(p[1]))
+      time.sleep(delay) # sleep delay seconds
+    except Exception:
+      retrySave(p,downloaddir,delay)
 
 baseurl = "http://sourceforge.net"
 groupid = None#157793
