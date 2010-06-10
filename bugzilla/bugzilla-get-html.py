@@ -6,12 +6,6 @@ import getopt
 import urllib
 import time
 
-def isInvalid(page,id):
-  for l in page.split('\n'):
-    if "Bug #"+str(id)+"" in l:
-      return True
-  return False
-
 #########################################################################
 class BugIterator:
   def __init__(self,baseurl,startid,endid,delay=2):
@@ -23,7 +17,7 @@ class BugIterator:
   
   def isInvalid(self,page,id):
     for l in page.split('\n'):
-      if "<p>Bugzilla &ndash; Invalid Bug ID</p>" in l:
+      if "Invalid Bug ID</p>" in l:
         return True
     return False
   
@@ -42,7 +36,6 @@ class BugIterator:
       page = None
     else:
       print "BugId - " + str(self.currentid-1)
-      print url
     return page
   
   def hasNext(self):
@@ -51,7 +44,7 @@ class BugIterator:
   def next(self):
     cpage = self.currentPage
     cid = self.currentid - 1
-    self.currentPage = self.getPage()
+    self.currentPage = self.getPage(self.delay)
     return (cid,cpage)
       
 #########################################################################    
@@ -84,21 +77,35 @@ def retrySave(baseurl,p,downlaoddir,delay):
     retrySave(baseurl,p,downlaoddir,delay)
 
 
-def extract(baseurl,downloaddir,delay=1):
-  bugIterator = BugIterator(baseurl,pageIterator)
+def extract(baseurl,startid,endid,downloaddir,delay=1):
+  bugIterator = BugIterator(baseurl,startid,endid)
   while (bugIterator.hasNext()):
     p = bugIterator.next()
     retrySave(baseurl,p,downloaddir,delay)
 
 baseurl = "https://bugs.eclipse.org/bugs"
 downloaddir = ""
-
+startid = -1
+endid = -1
 
 if __name__ == "__main__":
   arguments = sys.argv[1:]
-  optlist, args = getopt.getopt(arguments, 'd:')
-  print optlist
+  optlist, args = getopt.getopt(arguments, 's:e:d:')
   for o, a in optlist:
-    if o in ['-d','downloaddir=']:
+    if o in ['-d']:
       downloaddir = a
-  extract(baseurl,groupid,atid,downloaddir,1)
+    if o in ['-s']:
+      startid = int(a)
+    if o in ['-e']:
+      endid = int(a)
+  if startid<0 or endid<0:
+    sys.stderr.write("startid [-s] and endid [-e] need to be provided and be greater than -1")
+    sys.exit(0)
+  if len(args) == 0:
+    print "getting Eclipse bugs"
+  else:
+    baseurl = args[0]
+  if len(args) > 1:
+    sys.stderr.write("at most one base url needs to be provided")
+    sys.exit(0)
+  extract(baseurl,startid,endid,downloaddir,1)
