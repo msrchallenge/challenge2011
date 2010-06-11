@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+  <xsd:complexType name="attributeType">
+    <xsd:sequence>
+      <xsd:element name="name" type="xsd:string"/>
+      <xsd:element name="value" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="attribute-changeType">
+    <xsd:sequence>
+      <xsd:element name="name" type="xsd:string" />
+      <xsd:element name="old-value" type="xsd:string" />
+      <xsd:element name="modifer" type="xsd:string" />
+      <xsd:element name="modify-date" type="xsd:string" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="attributesType">
+    <xsd:element name="attribute" minOccurs="1" maxOccurs="unbound" type="attributeType" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="historyType">
+    <xsd:element name="attribute-change" minOccurs="0" maxOccurs="unbound" type="attribute-changeType" />
+  </xsd:complexType>
+  
+  
+  <xsd:complexType name="bugType">
+    <xsd:sequence>
+      <xsd:element name="attributes" type="attributesType" />
+      <xsd:element name="history" type="historyType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="bugsType">
+    <xsd:element name="bug" minOccurs="0" maxOccurs="unbound" type="bugType" />
+  </xsd:complexType>
+  
+  <xsd:element name="bugs" type="bugsType" />
+</xs:schema>
