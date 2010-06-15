@@ -11,6 +11,7 @@
   <xsd:complexType name="attribute-changeType">
     <xsd:sequence>
       <xsd:element name="name" type="xsd:string" />
+      <xsd:element name="new-value" type="xsd:string" />
       <xsd:element name="old-value" type="xsd:string" />
       <xsd:element name="modifer" type="xsd:string" />
       <xsd:element name="modify-date" type="xsd:string" />
