@@ -42,7 +42,7 @@
     <xsd:sequence>
       <xsd:element name="filename" type="xsd:string" />
       <xsd:element name="description" type="xsd:string" />
-      <xsd:element name="download" type="xsd:string" />
+      <xsd:element name="link" type="xsd:string" />
     </xsd:sequence>
   </xsd:complexType>
   

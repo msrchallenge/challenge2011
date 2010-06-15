@@ -181,7 +181,6 @@ class bugreport:
     print s+"    "+change[3]
     print s+"  </modify-date>"
     print s+"</change>"
-    print "to implement"
     
   def changes2xml(self,indentation):
     s = indentation
