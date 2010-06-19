@@ -36,6 +36,8 @@ class BugIterator(ABugIterator):
     self.i = 0
     self.urls = []
     self.delay=delay
+    self.startid = int(startid)
+    self.endid = int(endid)
   
   def fetchUrls(self,page):
     urls = []
@@ -45,8 +47,9 @@ class BugIterator(ABugIterator):
         bugurl = self.baseurl + tokens[len(tokens)-2]
         ts = tokens[len(tokens)-2].split('aid=')
         ts = ts[1].split('&gr')
-        bugid = int(ts[0])
-        urls.append((bugid,bugurl))
+        bugid = str(int(ts[0]))
+        if int(bugid) > self.startid or int(bugid) < self.endid:
+          urls.append((bugid,bugurl))
     return urls
     
   def hasNext(self):
