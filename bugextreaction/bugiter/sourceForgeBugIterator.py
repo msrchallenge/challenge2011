@@ -1,10 +1,7 @@
 #!/usr/bin/python
 
-import sys
-import os
-import getopt
-import urllib
 import time
+from ABugIterator import ABugIterator
 
 #########################################################################
 class PageIterator:
@@ -19,7 +16,7 @@ class PageIterator:
       
   def next(self):
     print "Next page"
-    page = fetchPage(self.nextUrl)
+    page = ABugIterator.retryFetch(self.nextUrl,0)
     self.nextUrl = None
     for l in page.split('\n'):
       if "Next" in l:
@@ -31,12 +28,14 @@ class PageIterator:
 #########################################################################
 
 #########################################################################
-class BugIterator:
-  def __init__(self,baseurl,pageIterator):
+class BugIterator(ABugIterator):
+  def __init__(self,baseurl,startid,endid,delay,groupid,atid):
+    raise "Need to implment start and end id"
     self.baseurl = baseurl
-    self.pageIterator = pageIterator
+    self.pageIterator = PageIterator(baseurl,groupid,atid)
     self.i = 0
     self.urls = []
+    self.delay=delay
   
   def fetchUrls(self,page):
     urls = []
@@ -55,97 +54,10 @@ class BugIterator:
     
   def next(self):
     if len(self.urls) > self.i:
-      print "BugId - " + str(self.urls[self.i][0])
       self.i = self.i + 1
-      return self.urls[self.i-1]
+      return (self.urls[self.i-1][0],self.retryFetch(self.urls[self.i-1][1],self.delay))
     self.i = 0
     self.urls = self.fetchUrls(self.pageIterator.next())
     return self.next()
       
-#########################################################################    
-
-def fetchPage(url):
-  sock = urllib.urlopen(url)
-  source = sock.read()
-  sock.close()
-  return source
-
-def savePage(name,directory,content):
-  if not os.path.exists(directory):
-    os.mkdir(directory)
-  f = open(directory+'/'+name,'w')
-  f.write(content)
-  f.close()
-
-def retrySave(p,downlaoddir,delay):
-  try:
-    savePage(str(p[0])+".html",downloaddir,fetchPage(p[1]))
-    time.sleep(delay) # sleep delay seconds
-  except Exception:
-    time.sleep(delay+1)
-    retrySave(p,downloaddir,delay)
-
-def extract(baseurl,groupid,atid,downloaddir,delay=1):
-  pageIterator = PageIterator(baseurl,groupid,atid);
-  bugIterator = BugIterator(baseurl,pageIterator)
-
-  while (bugIterator.hasNext()):
-    p = bugIterator.next()
-    try:
-      savePage(str(p[0])+".html",downloaddir,fetchPage(p[1]))
-      time.sleep(delay) # sleep delay seconds
-    except Exception:
-      retrySave(p,downloaddir,delay)
-
-baseurl = "http://sourceforge.net"
-groupid = None#157793
-atid    = None#805242
-downloaddir = ""
-trackerurl = baseurl + "/tracker/?group_id="+str(groupid)+"&atid="+str(atid)
-
-
-
-if __name__ == "__main__":
-  arguments = sys.argv[1:]
-  optlist, args = getopt.getopt(arguments, 'g:a:d:',['groupid=','atid=','downloaddir='])
-  print optlist
-  for o, a in optlist:
-    if o in ['-g','groupid=']:
-      groupid = int(a)
-    if o in ['-a','atid=']:
-      atid = int(a)
-    if o in ['-d','downloaddir=']:
-      downloaddir = a
-  if groupid==None or atid==None:
-    sys.stderr.write('Usage: ' + sys.argv[0] + ' -g groupid -a atid [-d downloaddir] \n')
-    sys.exit(0)
-  extract(baseurl,groupid,atid,downloaddir,1)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
