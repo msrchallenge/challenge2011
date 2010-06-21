@@ -26,7 +26,7 @@ class BugzillaBugreport(ABug):
       self.readChanges(j,lines)
     
   def readAttachments(self,i,lines):
-    if 'attachment.cgi?id=' in lines[i] and not 'Details' in lines[i]:
+    if 'attachment.cgi?id=' in lines[i] and not 'Details' in lines[i] and not 'Add an attachment' in lines[i]:
       cfile = lines[i+5] + " " + lines[i+6].repalce(" ","")
       cdesc = ""
       clink = lines[i].split('"')[4]
@@ -93,20 +93,18 @@ class BugzillaBugreport(ABug):
       self.addAttribute("longdesc",comment)
 
   def readBlockedBy(self,i,lines):
-    if '<span id="dependson_input_area">' in lines[i] and len(lines[i+2]) > 6:
-      j = i+2
+    if '<span id="dependson_input_area">' in lines[i] and 'id=' in lines[i+2]:
       self.addAttribute("blocked-by",[])
-      while not '</td>' in lines[j]:
-        self.addAttribute("blocked-by",lines[j].split('id=')[1].split('"')[0])
-        j += 1
+      ts = lines[i+2].split("span> <span")
+      for t in ts:
+        self.addAttribute("blocked-by",t.split("id=")[1].split('"')[0])      
 
   def readBlocks(self,i,lines):
-    if '<span id="blocked_input_area">' in lines[i] and len(lines[i+2]) > 6:
-      j = i+2
+    if '<span id="blocked_input_area">' in lines[i] and 'id=' in lines[i+2]:
       self.addAttribute("blocks",[])
-      while not '</td>' in lines[j]:
-        self.addAttribute("blocks",lines[j].split('id=')[1].split('"')[0])
-        j += 1
+      ts = lines[i+2].split("span> <span")
+      for t in ts:
+        self.addAttribute("blocks",t.split("id=")[1].split('"')[0])
 
   def readQAContact(self,i,lines):
     if 'for="qa_contact' in lines[i]:
@@ -118,7 +116,8 @@ class BugzillaBugreport(ABug):
 
   def readKeywords(self,i,lines):
     if 'for="keywords"' in lines[i]:
-      print "need to implement"
+      if len(lines[i+2].split('>')[1]) > 4:
+        self.addAttribute("keywords",lines[i+2].split('>')[1])
 
   def read(self):
     print "need to update"
