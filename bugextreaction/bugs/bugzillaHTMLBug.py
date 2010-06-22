@@ -3,14 +3,34 @@ from .util.FileIterator import FileIterator
 
 
 class BugzillaBugreport(ABug):
-  def __init__(self,textlines,bugid):
+  def __init__(self,textlines,historytextlines,bugid):
     if hasattr(ABug, '__init__'):
       ABug.__init__(self)
     self.lines = textlines
+    self.historylines = historytextlines
     self.addAttribute("bugid",bugid)
     self.namedict = {}
+    self.namedict["Blocks"] = 'blocks'
     
-  def readChanges(self,j,lines):
+  def readChanges(self):
+    lines = self.historylines
+    cwho  = None 
+    cwhen = None
+    cwhat = None
+    crem  = None
+    cadd  = None
+    i = 0
+    while i < len(lines):
+      if '<td rowspan="1" valign="top">' in lines[i]:
+        cwho  = lines[i].split('>')[1]
+        cwhen = lines[i+1].split('>')[1]
+        cwhat = self.namedict[lines[i+4].replace(" ","")]
+        crem  = lines[i+6].split('>')[1]
+        if 'blocks' == cwhat:
+          cadd = lines[i+8].split('id=')[1].split('"')[0]
+        else:
+          cadd  = lines[i+8].split('>')[1]
+        self.addChange( (cwho,cadd,crem,cwho,cwhen) )
     print "to implement"
  
   def readComment(self,i,lines):
@@ -107,12 +127,12 @@ class BugzillaBugreport(ABug):
         self.addAttribute("blocks",t.split("id=")[1].split('"')[0])
 
   def readQAContact(self,i,lines):
-    if 'for="qa_contact' in lines[i]:
-      print "need to implement"
+    if 'for="qa_contact' in lines[i] and '<span class="' in lines[i+2]:
+      self.addAttribute("qucontact",lines[i+2].split('>')[3].split('<')[0])
 
   def readWhiteboard(self,i,lines):
-    if 'for="status_whiteboard' in lines[i]:
-      print "need to implement"
+    if 'for="status_whiteboard' in lines[i] and '<span title="' in lines[i+2]:
+      self.addAttribute("whiteboard",lines[i+2].split('"')[1]
 
   def readKeywords(self,i,lines):
     if 'for="keywords"' in lines[i]:
@@ -125,16 +145,25 @@ class BugzillaBugreport(ABug):
     while i < len(self.lines):
       self.readCreator(i,self.lines)
       self.readAssigned(i,self.lines)
-      self.readLabel(i,self.lines)
       self.readCCs(i,self.lines)
       self.readStatus(i,self.lines)
+      self.readProduct(i,self.lines)
+      self.readComponent(i,self.lines)
+      self.readVersion(i,self.lines)
+      self.readPlatform(i,self.lines)
+      self.readImportance(i,self.lines)
+      self.readTargetMilestone(i,self.lines)
       self.readShortdesc(i,self.lines)
       self.readLongdesc(i,self.lines)
       self.readBlockedBy(i,self.lines)
       self.readBlocks(i,self.lines)
       self.readComment(i,self.lines)
       self.readAttachments(i,self.lines)
+      self.readKeyWords(i,self.lines)
+      self.readWhiteboard(i,self.lines)
+      self.readQAContact(i,self.lines)
       i += 1
+    self.readChanges()
       
   def completeChanges(self):
     print "need to implement"
