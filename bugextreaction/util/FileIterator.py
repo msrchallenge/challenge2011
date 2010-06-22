@@ -20,7 +20,11 @@ class FileIterator:
     
   def next(self):
     if os.path.isfile(self.directory + "/" + self.directorylist[self.index]):
-      self.index += 1
-      return (self.directorylist[self.index - 1])
+      if self.filter == None:
+        self.index += 1
+        return (self.directorylist[self.index - 1])
+      elif self.filter.check(self.directorylist[self.index],self.directory):
+        self.index += 1
+        return (self.directorylist[self.index - 1])
     self.index += 1
     return self.next()
