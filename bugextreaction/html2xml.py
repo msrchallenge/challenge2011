@@ -1,16 +1,32 @@
 import sys
 import getopt
 import os
-from bugs.chromeHTMLBug import ChromeBugreport
+
+from bugs.chromeHTMLBug      import ChromeBugreport
 from bugs.sourceForgeHTMLBug import SourceForgeBugreport
-from util.FileIterator import FileIterator
+from bugs.bugzillaHTMLBug    import BugzillaBugreport
+
+from util.FileIterator       import FileIterator
+from util.AFilter            import AFilter
+
 
 def usage():
   sys.stderr.write(sys.argv[0] + " -d/--directory directory -c/--chrome -s/--sourceforge -b/--bugzilla\n")
 
 def bugzilla(directory):
-  print "to implement"
-  sys.exit(-1)
+  class NoHistory(AFilter):
+    def check(self,filename,directory):
+      return not 'history' in filename
+  fi = FileIterator(direcotry,NoHistory())
+  while fi.hasNext():
+    fn = fi.next()
+    f.open(directory+"/"+fn)
+    lines = f.readlines()
+    f.close()
+    f.open(directory+"/"+fn.replace(".""-history."))
+    hlines = f.readlines()
+    f.close()
+    b = BugzillaBugreport(lines,hlines,fn.split('.')[0])
 
 def chrome(directory):
   fi = FileIterator(directory)
@@ -67,6 +83,7 @@ if __name__=="__main__":
         sys.exit(-1)
       bugtype = bugzilla
   if directory == None or bugtype == None:
+    print "hello"
     usage()
     sys.exit(-1)
   print "<bugs>"
