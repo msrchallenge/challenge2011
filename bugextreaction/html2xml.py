@@ -17,16 +17,21 @@ def bugzilla(directory):
   class NoHistory(AFilter):
     def check(self,filename,directory):
       return not 'history' in filename
-  fi = FileIterator(direcotry,NoHistory())
+  fi = FileIterator(directory,NoHistory())
   while fi.hasNext():
     fn = fi.next()
-    f.open(directory+"/"+fn)
+    f = open(directory+"/"+fn)
     lines = f.readlines()
     f.close()
-    f.open(directory+"/"+fn.replace(".""-history."))
+    f = open(directory+"/"+fn.replace(".","-history."))
     hlines = f.readlines()
     f.close()
     b = BugzillaBugreport(lines,hlines,fn.split('.')[0])
+    b.read()
+    if b.attributes.has_key("shortdesc"):
+      b.toXML("  ")
+    else:
+      sys.stderr.write("the bug report "+b.attributes["bugid"]+" couldn't be parsed correctly\n")
 
 def chrome(directory):
   fi = FileIterator(directory)
