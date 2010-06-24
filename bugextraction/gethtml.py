@@ -11,8 +11,6 @@ from bugiter.sourceForgeBugIterator import SourceForgeBugIterator
 
 def savePage(name,directory,content):
   sys.stderr.write("Writing " + name + '\n')
-  if not os.path.exists(directory):
-    os.makedirs(directory)
   f = open(directory+'/'+name,'w')
   f.write(content)
   f.close()
@@ -38,6 +36,11 @@ def run(itergen,baseurl,startid,endid,downloaddir,delay,threadmax,idinc):
   threadc = 0
   currentid = startid
   threads = []
+  try:
+    os.makedirs(downloaddir)
+  except OSError:
+    print "error"
+    pass
   # init
   while threadc < threadmax and currentid < endid:
     c = ExtractorThread( itergen(baseurl,currentid,currentid+idinc,delay),baseurl,downloaddir,delay )

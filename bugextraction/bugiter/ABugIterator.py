@@ -1,4 +1,5 @@
 import urllib
+import time
 
 class ABugIterator:
   def hasNext(self):
