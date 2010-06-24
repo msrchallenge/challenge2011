@@ -8,4 +8,4 @@ def retryFetchPage(url,delay=0):
     return source
   except Exception:
     time.sleep(delay)
-    return retryFetchPage(url,delay+1)
+    return retryFetchPage(url,delay)
