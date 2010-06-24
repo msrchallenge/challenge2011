@@ -5,18 +5,22 @@ from ABugIterator import ABugIterator
 
 #########################################################################
 class PageIterator:
-  def __init__(self,baseurl,groupid,atid):
+  def __init__(self,baseurl,groupid,atid,delay):
     self.baseurl = baseurl
+    self.delay = delay
     self.groupid = groupid
     self.atid = atid
     self.nextUrl = baseurl + "/tracker/?group_id="+str(groupid)+"&atid="+str(atid)
   
+  def init(self):
+    return True
+
   def hasNext(self):
     return self.nextUrl != None
       
   def next(self):
     print "Next page"
-    page = ABugIterator.retryFetch(self.nextUrl,0)
+    page = ABugIterator.retryFetch(self.nextUrl,self.delay)
     self.nextUrl = None
     for l in page.split('\n'):
       if "Next" in l:
@@ -28,17 +32,22 @@ class PageIterator:
 #########################################################################
 
 #########################################################################
-class BugIterator(ABugIterator):
+class SourceForgeBugIterator(ABugIterator):
   def __init__(self,baseurl,startid,endid,delay,groupid,atid):
     raise "Need to implment start and end id"
     self.baseurl = baseurl
-    self.pageIterator = PageIterator(baseurl,groupid,atid)
     self.i = 0
     self.urls = []
     self.delay=delay
     self.startid = int(startid)
     self.endid = int(endid)
-  
+
+  def init(self):
+    self.pageIterator = PageIterator(baseurl,groupid,atid,delay)  
+
+  def write(self,write,p,downloaddir):
+    write( str(p[0])+".html",downloaddir,p[1] )
+
   def fetchUrls(self,page):
     urls = []
     for l in page.split('\n'):

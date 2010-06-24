@@ -10,8 +10,9 @@ from bugiter.bugzillaBugIterator import BugzillaBugIterator
 from bugiter.sourceForgeBugIterator import SourceForgeBugIterator
 
 def savePage(name,directory,content):
+  sys.stderr.write("Writing " + name + '\n')
   if not os.path.exists(directory):
-    os.mkdir(directory)
+    os.makedirs(directory)
   f = open(directory+'/'+name,'w')
   f.write(content)
   f.close()
@@ -19,6 +20,7 @@ def savePage(name,directory,content):
 
 class ExtractorThread(Thread):
   def __init__(self,iterator,baseurl,downloaddir,delay):
+    Thread.__init__(self)
     self.iterator = iterator
     self.done = False
     self.baseurl = baseurl
@@ -26,9 +28,10 @@ class ExtractorThread(Thread):
     self.delay = delay
 
   def run(self):
+    self.iterator.init()
     while self.iterator.hasNext():
-      p = bugIterator.next()
-      savePage(self.baseurl,p,self.downloaddir,self.delay)
+      p = self.iterator.next()
+      self.iterator.write(savePage,p,self.downloaddir)
     self.done = True
 
 def run(itergen,baseurl,startid,endid,downloaddir,delay,threadmax,idinc):
@@ -36,17 +39,21 @@ def run(itergen,baseurl,startid,endid,downloaddir,delay,threadmax,idinc):
   currentid = startid
   threads = []
   # init
-  while threadc < threadmax:
-    threads.append(ExtractorThread(itergen(baseurl,currentid,currentid+idinc,delay)))
-    threads[-1].start()
+  while threadc < threadmax and currentid < endid:
+    c = ExtractorThread( itergen(baseurl,currentid,currentid+idinc,delay),baseurl,downloaddir,delay )
+    threads.append( c )
+    c.start()
+    sys.stderr.write("Started " + str(currentid) + " to " + str(currentid+idinc) + "\n")
     currentid = currentid+idinc+1
     threadc += 1
   while currentid < endid:
     i = 0
     while i < len(threads):
-      if threads[i].done:
-        threads[i] = ExtractorThread(itergen(baseurl,currentid,currentid+idinc,delay))
+      if threads[i].done and currentid < endid:
+        c = ExtractorThread( itergen(baseurl,currentid,currentid+idinc,delay),baseurl,downloaddir,delay )
+        threads[i] = ExtractorThread( c )
         currentid = currentid+idinc+1
+        c.start()
       i += 1
     time.sleep(1)
   while threadc > 0:
@@ -58,15 +65,15 @@ def run(itergen,baseurl,startid,endid,downloaddir,delay,threadmax,idinc):
 
 
 def chrome(baseurl,startid,endid,delay=1):
-  return chromeBugIterator(baseurl,startid,endid,delay)
+  return ChromeBugIterator(baseurl,startid,endid,delay)
 
 def bugzilla(baseurl,startid,endid,delay=1):
-  return bugzillaBugIterator(baseurl,startid,endid,delay)
+  return BugzillaBugIterator(baseurl,startid,endid,delay)
 
 def sourceforge(baseurl,startid,endid,delay=1):
   groupid = baseurl.split('=')[0].split('&')[0]
   atid = baseurl.split('=')[1]
-  return sourceForgeBugIterator(baseurl,startid,endid,delay,groupid,atid)
+  return SourceForgeBugIterator(baseurl,startid,endid,delay,groupid,atid)
 
 def usage():
   sys.stderr.write(sys.argv[0] + " -s/--startid [arg] -e/--endid [arg] -d/--downloaddirectory [arg] -n/--number-threads [arg] --sourceforge --bugzilla --chrome\n")
@@ -113,6 +120,7 @@ if __name__ == "__main__":
       delay = int(a)
     if o in ['-n','--number-threads']:
       nthreads = int(a)
-  if delay<0 or startid<0 or endid<0 or or startid==None or endid==None or trackertype==None:
+  if delay<0 or startid<0 or endid<0 or startid==None or endid==None or trackertype==None or len(args)!=1:
     usage()
+  baseurl = args[0]
   run(register[trackertype],baseurl,startid,endid,downloaddir,delay,nthreads,1000)

@@ -9,7 +9,9 @@ class ChromeBugIterator(ABugIterator):
     self.currentid = startid
     self.endid = endid
     self.delay = delay
-    self.currentPage = self.getPage(delay)
+
+  def init(self):
+    self.currentPage = self.getPage(self.delay)
     
   def isInvalid(self,page,id):
     for l in page.split('\n'):
@@ -18,7 +20,10 @@ class ChromeBugIterator(ABugIterator):
       if "<title>Issue Not Found -" in l:
         return True 
     return False
-    
+  
+  def write(self,write,p,downloaddir):
+    write( str(p[0])+".html",downloaddir,p[1] )
+  
   def getPage(self,delay):
     flag = True
     page = None
