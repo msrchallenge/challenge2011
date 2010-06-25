@@ -1,6 +1,4 @@
-#
-#
-#
+import sys
 
 class ABug:
   attachments = []
@@ -26,10 +24,13 @@ class ABug:
   
   def addAttachment(self,attachment):
     self.attachments.append(attachment)
+
+  def addToAttribute(self,attribute,value):
+    self.attributes[attribute] = self.attributes[attribute] + value
   
   def addChange(self,change):
     self.changes.append(change)
-    
+   
   def addAttribute(self,attribute,value):
     if self.attributes.has_key(attribute):
       if type(self.attributes[attribute]) == type([]):
@@ -45,16 +46,10 @@ class ABug:
   def attribute2xml(self,attribute,indentation):
     s = indentation
     print s+"<attribute>"
-    print s+"  <name>"
-    print s+"    "+attribute[0]
-    print s+"  </name>"
-    print s+"  <value>"
-    if type(attribute[1]) == type([]):
-      for l in attribute[1]:
-        print l
-    else:
-      print s+"    "+attribute[1]
-    print s+"  </value>"
+    sys.stdout.write(s+"  <name>" + attribute[0])
+    sys.stdout.write("</name>\n")
+    sys.stdout.write(s+"  <value>" + attribute[1])
+    sys.stdout.write("</value>\n")
     print s+"</attribute>"
     
   def attributes2xml(self,indentation):
@@ -67,16 +62,16 @@ class ABug:
   def comment2xml(self,comment,indentation):
     s = indentation
     print s+"<comment>"
-    print s+"  <commenter>"
-    print s+"    "+comment[1]
-    print s+"  </commenter>"
-    print s+"  <date>"
-    print s+"    "+comment[0]
-    print s+"  </date>"
-    print s+"  <comment>"
+    sys.stdout.write(s+"  <commenter>")
+    sys.stdout.write(comment[1])
+    sys.stdout.write("</commenter>\n")
+    sys.stdout.write(s+"  <date>")
+    sys.stdout.write(comment[0])
+    sys.stdout.write("</date>\n")
+    sys.stdout.write(s+"  <comment>")
     for l in comment[2]:
-      print l
-    print s+"  </comment>"
+      print l.replace('\n','')
+    sys.stdout.write("</comment>\n")
     print s+"</comment>"
     
   def comments2xml(self,indentation):
@@ -89,21 +84,21 @@ class ABug:
   def change2xml(self,change,indentation):
     s = indentation
     print s+"<change>"
-    print s+"  <name>"
-    print s+"    "+change[0]
-    print s+"  </name>"
-    print s+"  <new-value>"
-    print s+"    "+change[1]
-    print s+"  </new-value>"
-    print s+"  <old-value>"
-    print s+"    "+change[2]
-    print s+"  </old-value>"
-    print s+"  <modifier>"
-    print s+"    "+change[3]
-    print s+"  </modifier>"
-    print s+"  <modify-date>"
-    print s+"    "+change[4]
-    print s+"  </modify-date>"
+    sys.stdout.write(s+"  <name>")
+    sys.stdout.write(change[0])
+    sys.stdout.write("</name>\n")
+    sys.stdout.write(s+"  <new-value>")
+    sys.stdout.write(change[1])
+    sys.stdout.write("</new-value>\n")
+    sys.stdout.write(s+"  <old-value>")
+    sys.stdout.write(change[2])
+    sys.stdout.write("</old-value>\n")
+    sys.stdout.write(s+"  <modifier>")
+    sys.stdout.write(change[3])
+    sys.stdout.write("</modifier>\n")
+    sys.stdout.write(s+"  <modify-date>")
+    sys.stdout.write(change[4])
+    sys.stdout.write("</modify-date>\n")
     print s+"</change>"
     
   def changes2xml(self,indentation):
@@ -116,15 +111,15 @@ class ABug:
   def attachment2xml(self,attachment,indentation):
     s = indentation
     print s+"<attachment>"
-    print s+"  <filename>"
-    print s+"  "+attachment[0]
-    print s+"  </filename>"
-    print s+"  <description>"
-    print s+"  "+attachment[1]
-    print s+"  <description/>"
-    print s+"  <link>"
-    print s+"  "+attachment[2]
-    print s+"  </link>"
+    sys.stdout.write("  <filename>")
+    sys.stdout.write(attachment[0])
+    sys.stdout.write("</filename>\n")
+    sys.stdout.write(s+"  <description>")
+    sys.stdout.write(attachment[1])
+    sys.stdout.write("<description/>\n")
+    sys.stdout.write(s+"  <link>")
+    sys.stdout.write(attachment[2])
+    sys.stdout.write("</link>\n")
     print s+"</attachment>"
     
   def attachments2xml(self,indentation):

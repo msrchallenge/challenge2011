@@ -88,7 +88,6 @@ if __name__=="__main__":
         sys.exit(-1)
       bugtype = bugzilla
   if directory == None or bugtype == None:
-    print "hello"
     usage()
     sys.exit(-1)
   print "<bugs>"

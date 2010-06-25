@@ -30,5 +30,5 @@ class ABugIterator:
       return source
     except Exception:
       time.sleep(delay)
-      return retryFetchPage(url,delay+1)
+      return self.retryFetchPage(url,delay+1)
 

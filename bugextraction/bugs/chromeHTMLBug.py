@@ -35,8 +35,8 @@ class ChromeBugreport(ABug):
               if len(label) > 1:
                 ovalue = ""
                 nvalue = ""
-                if label == '-':
-                  ovalue = label
+                if label[0] == '-':
+                  ovalue = label[1:]
                 else:
                   nvalue = label
                 self.addChange((cfield,nvalue,ovalue,commenter,date))  
@@ -51,11 +51,11 @@ class ChromeBugreport(ABug):
   def readComment(self,i,lines):
     if '<span class="author">Comment <a name=' in lines[i]:
       date = lines[i+4].split('"')[3]
-      commenter = lines[i+3].replace('\n','')
+      commenter = lines[i+3].replace('\n','').replace('</span>,','')
       comment = []
       j = i + 7
       while not "</pre>" in lines[j]:
-        comment.append(lines[j])
+        comment.append(lines[j].replace('\r',''))
         j+=1
       self.addComment((date,commenter,comment))
       self.readChanges(j,lines)
@@ -76,33 +76,38 @@ class ChromeBugreport(ABug):
     
   def readCreator(self,i,lines):
     if '<div class="author">' in lines[i]:
-      self.addAttribute("creator"     , lines[i+1].replace("Reported by ",""))
-      self.addAttribute("creationDate", lines[i+1].split('"')[3])
+      self.addAttribute("creator"     , lines[i+1].replace("Reported by ","").replace(',','').replace('\n',''))
+      self.addAttribute("creationDate", lines[i+2].split('"')[3])
 
   def readAssigned(self,i,lines):
     if '<tr><th align="left">Owner:&nbsp;</th><td>' in lines[i]:
-      self.addAttribute("assigned", lines[i+2])
+      self.addAttribute("assigned", lines[i+2].replace("\n",""))
 
   def readLabel(self,i,lines):
     if '<a href="list?q=label:' in lines[i] and not '<tr><td colspan="2">' in lines[i]:
       if not self.attributes.has_key("label"):
-        self.addAttribute("label",[])
-      self.addAttribute("label",lines[i].split('"')[1].split(":")[1] + lines[i+1].split('"')[1])
+        self.addAttribute("label",lines[i].split('"')[1].split(":")[1] + " -- " + lines[i+1].split('"')[1].replace('\n',''))
+      else:
+        self.addToAttribute("label","\n"+lines[i].split('"')[1].split(":")[1] + " -- " + lines[i+1].split('"')[1].replace("\n",''))
 
   def readCCs(self,i,lines):
     if '<tr><th class="vt" align="left">Cc:&nbsp;</th><td>' in lines[i]:
-      if not self.attributes.has_key("cc"):
-        self.addAttribute("cc",[])
       j = i+3
+      text = None
       while not "</td>" in lines[j]:
         for cc in lines[j].split(",  "):
-          self.addAttribute("cc",cc)
+          if len(lines[j].replace(' ',''))>3:
+            if text == None:
+              text = cc.replace('\n','')
+            else:
+              text += '\n' + cc.replace('\n','')
         j += 1    
+      self.addAttribute("cc",text)
 
   def readStatus(self,i,lines):
     if '<tr><th align="left">Status:&nbsp;</th>' in lines[i]:
       if len(lines[i+3]) > 4:
-        self.addAttribute("status",lines[i+3].split(">")[1] + " -- " + lines[i+3].split('"')[1])
+        self.addAttribute("status",lines[i+3].split(">")[1].split("<")[0] + " -- " + lines[i+3].split('"')[1])
       else:
         self.addAttribute("status","")
 
@@ -113,29 +118,38 @@ class ChromeBugreport(ABug):
   def readLongdesc(self,i,lines):
     if '<td class="vt issuedescription" width="100%">' in lines[i]:
       j = i+7
-      self.addAttribute("longdesc",[])
+      #self.addAttribute("longdesc",[])
+      t = []
       while not '</pre>' in lines[j]:
-        self.addAttribute("longdesc",lines[j])
+        t.append(lines[j].replace('\n','').replace('\r',''))
         j += 1
+      text = t[0]
+      for tt in t[1:]:
+        text += '\n'+ tt.replace('\n','')
+      self.addAttribute("longdesc",text)
 
   def readBlockedBy(self,i,lines):
     if '<br><b>Blocked on:</b><br>' in lines[i]:
       j = i+7
-      if not self.attributes.has_key('blocked-by'):
-        self.addAttribute('blocked-by',[])
       while not '</div>' in lines[j]:
-        if 'issue' in lines[j]:
-          self.addAttribute('blocked-by',lines[j].split(' ')[1].split('<')[0])
+        if 'issue' in lines[j] and not 'chromium-' in lines[j] and not '<a href="' in lines[j] and not 'class="closed_ref"' in lines[j] and not 'href="detail?id=' in lines[j]:
+          import sys
+          sys.stderr.write(self.attributes["bugid"] + " - " + lines[j-1] + lines[j] + lines[j+1])
+          if not self.attributes.has_key('blocked-by'):
+            self.addAttribute('blocked-by',lines[j].split('issue ')[1].split('<')[0].replace('\n',''))
+          else:
+            self.addToAttribute('blocked-by','\n'+lines[j].split('issue ')[1].split('<')[0].replace('\n',''))
         j+=1
 
   def readBlocks(self,i,lines):
     if '<br><b>Blocking:</b><br>' in lines[i]:
       j = i
-      if not self.attributes.has_key('blocks'):
-        self.addAttribute('blocks',[])
       while not '</div>' in lines[j]:
-        if 'issue' in lines[j]:
-          self.addAttribute('blocks',lines[j].split(' ')[1].split('<')[0])
+        if 'issue' in lines[j] and not 'chromium-' in lines[j] and not '<a href="' in lines[j] and not 'class="closed_ref"' in lines[j] and not 'href="detail?id=' in lines[j]:
+          if not self.attributes.has_key('blocks'):
+            self.addAttribute('blocks',lines[j].split('issue ')[1].split('<')[0].replace('\n',''))
+          else:
+            self.addToAttribute('blocks','\n'+lines[j].split('issue ')[1].split('<')[0].replace('\n',''))
         j += 1
 
   def read(self):
@@ -156,14 +170,14 @@ class ChromeBugreport(ABug):
       
   def completeChanges(self):
     c = {}
-    c['shortdesc'] = self.attributes['shortdesc']
-    c['status'] = self.attributes['status']
-    c['assigned'] = self.attributes['assigned']
+    c['shortdesc'] = ""
+    c['status'] = 'Untriaged'
+    c['assigned'] = self.attributes["creator"].split('>')[1].split('<')[0]
     i = 0
     while i < len(self.changes):
       change = self.changes[i]
       if change[0] == 'shortdesc' or change[0] == 'status' or change[0] == 'assigned':
         t = change[2]
-        self.changes[i] = (change[0],c[change[0]],change[2],change[3],change[4])
+        self.changes[i] = (change[0],change[2],c[change[0]],change[3],change[4])
         c[change[0]] = t
       i += 1
