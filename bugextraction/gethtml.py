@@ -54,16 +54,16 @@ def run(itergen,baseurl,startid,endid,downloaddir,delay,threadmax,idinc):
     while i < len(threads):
       if threads[i].done and currentid < endid:
         c = ExtractorThread( itergen(baseurl,currentid,currentid+idinc,delay),baseurl,downloaddir,delay )
-        threads[i] = ExtractorThread( c )
+        threads[i] = c
         currentid = currentid+idinc+1
         c.start()
       i += 1
     time.sleep(1)
-  while threadc > 0:
-    threadc = 0
+  flag = True
+  while flag:
+    flag = False
     for thread in threads:
-      if thread.done:
-        ct += 1
+      flag = flag or not thread.done
     time.sleep(1)
 
 
